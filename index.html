@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🎧 Emotion-Based Music Recommender</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      text-align: center;
+      color: #fff;
+      background: linear-gradient(135deg, #667eea, #764ba2, #89f7fe, #66a6ff);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 20px;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    h1 {
+      font-size: 2.8rem;
+      margin-top: 40px;
+      letter-spacing: 1px;
+      text-shadow: 0 0 15px rgba(255,255,255,0.3);
+    }
+
+    /* Floating notes */
+    .note {
+      position: fixed;
+      color: rgba(255,255,255,0.25);
+      font-size: 32px;
+      animation: floatNotes 10s linear infinite;
+      z-index: 0;
+    }
+
+    @keyframes floatNotes {
+      from { transform: translateY(100vh) rotate(0deg); opacity: 1; }
+      to { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* Glass form */
+    form {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(20px);
+      border-radius: 25px;
+      padding: 35px;
+      width: 350px;
+      margin: 40px auto;
+      border: 1px solid rgba(255,255,255,0.25);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      position: relative;
+      z-index: 2;
+      animation: fadeIn 1.5s ease;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-top: 12px;
+    }
+
+    input, select {
+      width: 90%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      margin-top: 10px;
+      font-size: 1rem;
+      background: rgba(255,255,255,0.95);
+      outline: none;
+      transition: box-shadow 0.3s ease;
+    }
+
+    input:focus, select:focus {
+      box-shadow: 0 0 10px #00e6ff;
+    }
+
+    button {
+      margin-top: 20px;
+      background: linear-gradient(90deg, #ff00cc, #3333ff);
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      font-size: 1.1rem;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: 0.4s ease;
+      font-weight: 600;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+
+    button:hover {
+      transform: scale(1.07);
+      box-shadow: 0 0 20px #ff00cc, 0 0 35px #3333ff;
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      margin-top: 30px;
+      text-shadow: 0 0 10px rgba(255,255,255,0.2);
+    }
+
+    h2 span { color: #00ffea; }
+
+    h3 {
+      margin-top: 15px;
+      font-weight: 400;
+      color: #f3f3f3;
+      font-size: 1.1rem;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 25px;
+      animation: fadeIn 2s ease;
+    }
+
+    li {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 18px;
+      padding: 20px;
+      width: 340px;
+      transition: 0.4s ease;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    li:hover {
+      transform: translateY(-8px) scale(1.03);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    li strong {
+      font-size: 1.1rem;
+      color: #fff;
+    }
+
+    li em {
+      display: block;
+      color: #eee;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+
+    iframe {
+      border-radius: 15px;
+      width: 100%;
+      height: 152px; /* Larger embed view */
+      border: none;
+      margin-top: 10px;
+      transition: transform 0.3s ease;
+    }
+
+    iframe:hover {
+      transform: scale(1.02);
+    }
+
+    footer {
+      margin-top: 50px;
+      color: rgba(255,255,255,0.7);
+      font-size: 0.9rem;
+      animation: fadeIn 2.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      li { width: 90%; }
+      form { width: 90%; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Floating notes -->
+  <div class="note" style="left:10%; animation-delay:0s;">🎵</div>
+  <div class="note" style="left:30%; animation-delay:2s;">🎶</div>
+  <div class="note" style="left:50%; animation-delay:4s;">🎵</div>
+  <div class="note" style="left:70%; animation-delay:1s;">🎶</div>
+  <div class="note" style="left:90%; animation-delay:3s;">🎵</div>
+
+    <nav style="position: relative; z-index: 10; background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.25); padding: 15px; border-radius: 15px; margin-bottom: 20px; max-width: 600px; margin-left: auto; margin-right: auto; display:flex; justify-content:center; align-items:center; gap:20px;">
+    <a href="/" style="text-decoration:none; color:#fff; font-weight:600; transition:0.3s;">Home</a>
+    <a href="/about" style="text-decoration:none; color:#fff; font-weight:600; transition:0.3s;">About</a>
+    <a href="/albums" style="text-decoration:none; color:#fff; font-weight:600; transition:0.3s;">Albums</a>
+    <a href="/favorites" style="text-decoration:none; color:#fff; font-weight:600; transition:0.3s;">Favorites</a>
+    <a href="/profile" style="text-decoration:none; color:#fff; font-weight:600; transition:0.3s;">Profile</a>
+    <a href="/contact" style="text-decoration:none; color:#fff; font-weight:600; transition:0.3s;">Contact</a>
+  </nav>
+
+  <h1>🎧 Emotion-Based Music Recommender</h1>
+
+  <form method="POST">
+    <label>How are you feeling?</label>
+    <input type="text" name="feeling" placeholder="e.g., I'm feeling romantic 💕" required>
+
+    <label>What do you want to do?</label>
+    <select name="mode" required>
+      <option value="match">Stay in my mood</option>
+      <option value="cheer">Cheer me up</option>
+    </select>
+
+    <button type="submit">Get Songs 🎶</button>
+  </form>
+
+  {% if emotion %}
+  <h2>Detected Emotion: <span>{{ emotion }}</span></h2>
+
+  {% if mode == 'cheer' %}
+  <h3>💫 You chose to cheer up! Playing {{ recommended_emotion }} songs to lift your mood.</h3>
+  {% else %}
+  <h3>🎵 Playing {{ recommended_emotion }} songs to match your mood.</h3>
+  {% endif %}
+
+  <ul>
+    {% for song in recommendations %}
+    <li>
+      <strong>{{ song.title }}</strong>
+      <em>by {{ song.artist }}</em>
+      {% if song.url %}
+      <iframe src="{{ song.url }}" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <footer>Made with ❤️ using Flask & Emotion AI</footer>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ title if title else "Emotion Music App" }}</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      text-align: center;
+      color: #fff;
+      background: linear-gradient(135deg, #667eea, #764ba2, #89f7fe, #66a6ff);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding: 20px;
+    }
+
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .note {
+      position: fixed;
+      color: rgba(255,255,255,0.25);
+      font-size: 32px;
+      animation: floatNotes 10s linear infinite;
+      z-index: 0;
+    }
+
+    @keyframes floatNotes {
+      from { transform: translateY(100vh) rotate(0deg); opacity: 1; }
+      to { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
+    }
+
+    nav {
+      position: relative;
+      z-index: 10;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255,255,255,0.25);
+      padding: 15px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+    }
+
+    nav a {
+      margin: 0;
+      text-decoration: none;
+      color: #fff;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    nav a:hover {
+      color: #00e6ff;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+  <div class="note" style="left:10%; animation-delay:0s;">🎵</div>
+  <div class="note" style="left:30%; animation-delay:2s;">🎶</div>
+  <div class="note" style="left:50%; animation-delay:4s;">🎵</div>
+  <div class="note" style="left:70%; animation-delay:1s;">🎶</div>
+  <div class="note" style="left:90%; animation-delay:3s;">🎵</div>
+
+  <nav>
+    <a href="/">Home</a>
+    <a href="/about">About</a>
+    <a href="/albums">Albums</a>
+    <a href="/favorites">Favorites</a>
+    <a href="/profile">Profile</a>
+    <a href="/contact">Contact</a>
+  </nav>
+
+  {% block content %}{% endblock %}
+
+  <footer style="margin-top:50px; color:rgba(255,255,255,0.7); font-size:0.9rem;">
+    Made with ❤️ using Flask & Emotion AI
+  </footer>
+
+</body>
+</html>

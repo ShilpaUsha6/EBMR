@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Profile - Playlists</title>
+	<style>
+		body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea, #764ba2, #89f7fe, #66a6ff); background-size: 400% 400%; animation: gradientBG 15s ease infinite; min-height: 100vh; padding: 20px; margin:0; }
+		@keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+		nav { position: relative; z-index: 10; background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.25); padding: 15px; border-radius: 15px; margin-bottom: 20px; max-width: 900px; margin-left: auto; margin-right: auto; display:flex; justify-content:center; align-items:center; gap:20px; }
+		nav a { text-decoration:none; color:#fff; font-weight:600; }
+		.container { max-width: 900px; margin: 0 auto; background: rgba(255,255,255,0.96); border-radius: 10px; padding: 18px; box-shadow: 0 6px 24px rgba(0,0,0,0.12); }
+		h1 { text-align:center; color:#333; }
+		.new-playlist { display:flex; gap:8px; margin-bottom:12px; }
+		.playlists { display:flex; gap:16px; flex-direction:column; }
+		.playlist-card { padding:12px; border-radius:8px; background:#fafafa; border:1px solid #eee; }
+		.playlist-header { display:flex; justify-content:space-between; align-items:center; }
+		.playlist-songs { margin-top:8px; }
+		.song-row { display:flex; justify-content:space-between; align-items:center; padding:8px 6px; border-radius:6px; background:#fff; margin-bottom:6px; border:1px solid #f0f0f0; }
+		.btn { padding:8px 10px; border-radius:6px; border:none; cursor:pointer; font-weight:600; }
+		.del-btn { background:#e74c3c; color:#fff; }
+		.play-btn { background:#667eea; color:#fff; }
+		.remove-btn { background:#f39c12; color:#fff; }
+		.small { font-size:13px; color:#666; }
+		.empty { text-align:center; color:#666; padding:24px 0; }
+		.modal { display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.5); }
+		.modal-content { background:#fff; margin:8% auto; padding:16px; width:90%; max-width:480px; border-radius:8px; }
+	</style>
+</head>
+<body>
+	<nav>
+		<a href="/">Home</a>
+		<a href="/about">About</a>
+		<a href="/albums">Albums</a>
+		<a href="/favorites">Favorites</a>
+		<a href="/profile">Profile</a>
+		<a href="/contact">Contact</a>
+	</nav>
+
+	<div class="container">
+	<h1>Your Playlists</h1>
+
+	<div style="display:flex;align-items:center;justify-content:flex-start;gap:12px;margin-bottom:20px;">
+		<div class="new-playlist" style="display:flex;gap:8px;">
+			<input id="newPlaylistName" placeholder="New playlist name" style="padding:8px;border-radius:6px;border:1px solid #ddd;" />
+			<button class="btn play-btn" onclick="createPlaylist()">Create</button>
+		</div>
+	</div>
+
+	<div id="playlistsContainer" class="playlists"></div>
+	</div>
+
+	<!-- Player modal -->
+	<div id="profilePlayerModal" class="modal">
+		<div class="modal-content">
+			<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+				<strong id="profilePlayerTitle">Playing</strong>
+				<button onclick="closeProfilePlayer()" style="background:transparent;border:none;font-size:18px;cursor:pointer;">&times;</button>
+			</div>
+			<div id="profilePlayerArea"></div>
+		</div>
+	</div>
+
+	<script>
+		function getPlaylists() {
+			try { const raw = localStorage.getItem('playlists'); return raw ? JSON.parse(raw) : {}; } catch(e){ return {}; }
+		}
+		function savePlaylists(pl) { localStorage.setItem('playlists', JSON.stringify(pl)); }
+
+		function createPlaylist() {
+			const nameEl = document.getElementById('newPlaylistName');
+			const name = nameEl.value.trim();
+			if (!name) { alert('Enter a playlist name'); return; }
+			const pl = getPlaylists();
+			if (pl[name]) { alert('Playlist already exists'); return; }
+			pl[name] = [];
+			savePlaylists(pl);
+			try { localStorage.setItem('playlists_last_updated', String(Date.now())); } catch(e) {}
+			nameEl.value = '';
+			renderPlaylists();
+		}
+
+		function deletePlaylist(name) {
+			if (!confirm(`Delete playlist "${name}"?`)) return;
+			const pl = getPlaylists();
+			delete pl[name];
+			savePlaylists(pl);
+			try { localStorage.setItem('playlists_last_updated', String(Date.now())); } catch(e) {}
+			renderPlaylists();
+		}
+
+		function renderPlaylists() {
+			const container = document.getElementById('playlistsContainer');
+			container.innerHTML = '';
+			const pl = getPlaylists();
+			const names = Object.keys(pl);
+			if (names.length === 0) {
+				container.innerHTML = '<div class="empty">No playlists yet. Add songs from the Albums page.</div>';
+				return;
+			}
+			names.forEach(name => {
+				const card = document.createElement('div'); card.className = 'playlist-card';
+				const header = document.createElement('div'); header.className = 'playlist-header';
+				const h = document.createElement('strong'); h.textContent = name + ` (${pl[name].length})`;
+				const controls = document.createElement('div');
+				const del = document.createElement('button'); del.className = 'btn del-btn'; del.textContent = 'Delete'; del.onclick = () => deletePlaylist(name);
+				controls.appendChild(del);
+				header.appendChild(h); header.appendChild(controls);
+				card.appendChild(header);
+
+				const songsWrap = document.createElement('div'); songsWrap.className = 'playlist-songs';
+				(pl[name] || []).forEach((song, idx) => {
+					const row = document.createElement('div'); row.className = 'song-row';
+					const left = document.createElement('div'); left.innerHTML = `<div style="font-weight:600">${song.title}</div><div style="font-size:12px;color:#666">${song.artist}</div>`;
+					const right = document.createElement('div');
+					const pbtn = document.createElement('button'); pbtn.className = 'btn play-btn'; pbtn.textContent = 'Play'; pbtn.onclick = () => { playFromProfile(song); };
+					const rbtn = document.createElement('button'); rbtn.className = 'btn remove-btn'; rbtn.textContent = 'Remove'; rbtn.style.marginLeft = '8px'; rbtn.onclick = () => { removeFromPlaylist(name, idx); };
+					right.appendChild(pbtn); right.appendChild(rbtn);
+					row.appendChild(left); row.appendChild(right);
+					songsWrap.appendChild(row);
+				});
+			card.appendChild(songsWrap);
+			container.appendChild(card);
+		});
+	}		function removeFromPlaylist(playlistName, index) {
+			const pl = getPlaylists();
+			if (!pl[playlistName]) return;
+			pl[playlistName].splice(index, 1);
+			savePlaylists(pl);
+			try { localStorage.setItem('playlists_last_updated', String(Date.now())); } catch(e) {}
+			renderPlaylists();
+		}
+
+		function playFromProfile(song) {
+			incrementStreamCount(song);
+			const modal = document.getElementById('profilePlayerModal');
+			const area = document.getElementById('profilePlayerArea');
+			document.getElementById('profilePlayerTitle').textContent = `${song.title} — ${song.artist}`;
+			if (song.url) {
+				area.innerHTML = `<iframe src="${song.url}" width="100%" height="160" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
+			} else {
+				area.innerHTML = '<p style="color:#666;">No preview available</p>';
+			}
+			modal.style.display = 'block';
+		}
+
+		function closeProfilePlayer() { document.getElementById('profilePlayerModal').style.display = 'none'; document.getElementById('profilePlayerArea').innerHTML = ''; }
+
+		function incrementStreamCount(song) {
+			try {
+				const raw = localStorage.getItem('songStreams');
+				const streams = raw ? JSON.parse(raw) : {};
+				const songKey = `${song.title}---${song.artist}`;
+				streams[songKey] = (streams[songKey] || 0) + 1;
+				localStorage.setItem('songStreams', JSON.stringify(streams));
+			} catch (e) { console.error('Failed to update stream count', e); }
+		}
+
+		window.addEventListener('DOMContentLoaded', () => { renderPlaylists(); });
+
+		// Auto-refresh when playlists are changed in other tabs or by Albums page
+		window.addEventListener('storage', (e) => {
+			if (!e) return;
+			if (e.key === 'playlists' || e.key === 'playlists_last_updated') {
+				renderPlaylists();
+			}
+		});
+	</script>
+</body>
+</html>
+

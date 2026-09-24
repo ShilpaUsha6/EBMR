@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Albums - Emotion Music Recommender</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea, #764ba2, #89f7fe, #66a6ff); background-size: 400% 400%; animation: gradientBG 15s ease infinite; min-height: 100vh; overflow-x: hidden; padding: 20px; margin: 0; }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        nav { position: relative; z-index: 10; background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.25); padding: 15px; border-radius: 15px; margin-bottom: 20px; max-width: 600px; margin-left: auto; margin-right: auto; display:flex; justify-content:center; align-items:center; gap:20px; }
+        nav a { margin: 0; text-decoration:none; color:#fff; font-weight:600; transition:0.3s; }
+        nav a:hover { color:#666; }
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        h1 { text-align: center; color: #333; margin-bottom: 30px; }
+        .albums-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .album-card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.3s; cursor: pointer; }
+        .album-card:hover { transform: translateY(-5px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .album-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; }
+        .album-title { font-size: 20px; font-weight: bold; margin: 0; }
+        .song-count { font-size: 14px; margin: 5px 0 0 0; opacity: 0.9; }
+        .album-body { padding: 15px; }
+        .song-list { list-style: none; padding: 0; margin: 0; }
+        .song-item { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+        .song-item:last-child { border-bottom: none; }
+        .song-title { font-weight: 500; color: #333; }
+        .song-emotion { font-size: 12px; color: #999; margin-top: 3px; }
+
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); animation: fadeIn 0.3s ease; }
+        .modal-content { background-color: #fff; margin: 5% auto; padding: 0; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; }
+        .modal-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { margin: 0; font-size: 24px; }
+        .close { color: white; font-size: 28px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .close:hover { opacity: 0.7; }
+        .modal-body { padding: 25px; max-height: 60vh; overflow-y: auto; }
+        .modal-songs { list-style: none; padding: 0; margin: 0; }
+        .modal-song-item { padding: 12px; background: #f9f9f9; margin: 8px 0; border-radius: 6px; border-left: 4px solid #667eea; }
+        .modal-song-item strong { color: #333; display: block; }
+        .modal-song-item em { color: #999; font-size: 12px; display: block; margin-top: 4px; }
+        .stream-count { color: #666; font-size: 11px; margin-top: 6px; }
+        .play-btn { padding: 8px 12px; background: #667eea; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight:600; margin-right:8px; }
+        .play-btn:hover { background: #5564d6; }
+        .fav-btn { padding: 6px 10px; background: transparent; color: #e74c3c; border: 1px solid #e74c3c; border-radius: 6px; cursor: pointer; font-weight:600; }
+        .fav-btn.active { background: #e74c3c; color: #fff; }
+        .favorites-panel { max-width: 1000px; margin: 0 auto 18px auto; padding: 12px 18px; background: #fff; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); color: #333; }
+        .favorites-list { display:flex; flex-wrap:wrap; gap:12px; }
+        .favorite-item { background:#f7f7f7; padding:10px 12px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/albums">Albums</a>
+        <a href="/favorites">Favorites</a>
+        <a href="/profile">Profile</a>
+        <a href="/contact">Contact</a>
+    </nav>
+
+    <div class="container">
+        <h1>🎵 Albums</h1>
+        <div class="albums-grid">
+            {% for album in albums %}
+            <div class="album-card" onclick="openModal('{{ album.artist }}')">
+                <div class="album-header">
+                    <p class="album-title">{{ album.artist }}</p>
+                    <p class="song-count">{{ album.song_count }} song{{ 's' if album.song_count != 1 else '' }}</p>
+                </div>
+                <div class="album-body">
+                    <ul class="song-list">
+                        {% for song in album.songs[:3] %}
+                        <li class="song-item">
+                            <div class="song-title">{{ song.title }}</div>
+                            <div class="song-emotion">{{ song.emotions }}</div>
+                        </li>
+                        {% endfor %}
+                        {% if album.song_count > 3 %}
+                        <li class="song-item" style="color:#667eea; font-weight:bold;">
+                            +{{ album.song_count - 3 }} more songs...
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="albumModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle"></h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="modalPlayer" style="margin-bottom:12px;"></div>
+                <ul class="modal-songs" id="modalSongsList"></ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Playlist Modal -->
+    <div id="playlistModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" style="border-radius:12px;">
+                <h2>Add to Playlist</h2>
+                <span class="close" onclick="closePlaylistModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom:10px;">
+                    <label for="playlistSelect">Choose playlist</label>
+                    <select id="playlistSelect" style="width:100%;padding:8px;border-radius:6px;margin-top:6px;border:1px solid #ddd;"></select>
+                </div>
+                <div style="margin-bottom:10px;">
+                    <label for="newPlaylistName">Or create new</label>
+                    <input id="newPlaylistNameForAdd" placeholder="New playlist name" style="width:100%;padding:8px;border-radius:6px;border:1px solid #ddd;margin-top:6px;" />
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:8px;">
+                    <button class="play-btn" onclick="addSongToSelectedPlaylist()">Add</button>
+                    <button class="fav-btn" onclick="closePlaylistModal()">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load albums data from JSON endpoint to avoid placing Jinja inside JS
+        let albumsData = null;
+
+        async function loadAlbumsData() {
+            try {
+                const res = await fetch('/albums.json');
+                albumsData = await res.json();
+            } catch (err) {
+                console.error('Failed to load albums data', err);
+                albumsData = [];
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadAlbumsData();
+            loadFavoritesFromStorage();
+        });
+
+        function openModal(artist) {
+            const modal = document.getElementById("albumModal");
+            const title = document.getElementById("modalTitle");
+            const songsList = document.getElementById("modalSongsList");
+            const player = document.getElementById("modalPlayer");
+
+            title.textContent = "🎵 " + artist;
+            songsList.innerHTML = "";
+            player.innerHTML = "";
+
+            const album = (albumsData || []).find(a => a.artist === artist);
+            const songs = album ? album.songs : [];
+
+            songs.forEach(song => {
+                const li = document.createElement("li");
+                li.className = "modal-song-item";
+
+                const titleEl = document.createElement("strong");
+                titleEl.textContent = song.title;
+
+                const em = document.createElement("em");
+                em.textContent = song.emotions || song.emotion || "";
+
+                // Display stream count
+                const streamCount = document.createElement("div");
+                streamCount.className = "stream-count";
+                const streams = getStreamCount(song);
+                streamCount.textContent = `🎵 ${streams} streams`;
+
+                const btnWrap = document.createElement("div");
+                btnWrap.style.marginTop = "8px";
+
+                const btn = document.createElement("button");
+                btn.className = "play-btn";
+                btn.textContent = "Play";
+                btn.addEventListener("click", () => {
+                    incrementStreamCount(song);
+                    playSong(song.url);
+                });
+
+                btnWrap.appendChild(btn);
+
+                // favorite button
+                const fav = document.createElement("button");
+                fav.className = "fav-btn";
+                fav.textContent = isFavorite(song) ? "♥ Favorite" : "♡ Favorite";
+                if (isFavorite(song)) fav.classList.add('active');
+                fav.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleFavorite(song, fav);
+                });
+                btnWrap.appendChild(fav);
+
+                // add to playlist button
+                const plBtn = document.createElement('button');
+                plBtn.className = 'play-btn';
+                plBtn.style.background = '#34a853';
+                plBtn.style.marginLeft = '8px';
+                plBtn.textContent = '+ Playlist';
+                plBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    openPlaylistModal(song);
+                });
+                btnWrap.appendChild(plBtn);
+
+                li.appendChild(titleEl);
+                li.appendChild(em);
+                li.appendChild(streamCount);
+                li.appendChild(btnWrap);
+
+                songsList.appendChild(li);
+            });
+
+            modal.style.display = "block";
+        }
+
+        // Favorites stored in localStorage under key 'favoriteSongs'
+        let favorites = [];
+
+        function loadFavoritesFromStorage() {
+            try {
+                const raw = localStorage.getItem('favoriteSongs');
+                favorites = raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                favorites = [];
+            }
+            renderFavoritesSection();
+        }
+
+        function saveFavoritesToStorage() {
+            localStorage.setItem('favoriteSongs', JSON.stringify(favorites));
+        }
+
+        function songId(song) {
+            // unique id for a song (title + artist)
+            return `${song.title}---${song.artist}`;
+        }
+
+        function isFavorite(song) {
+            return favorites.some(f => songId(f) === songId(song));
+        }
+
+        function toggleFavorite(song, btnEl) {
+            const id = songId(song);
+            const idx = favorites.findIndex(f => songId(f) === id);
+            if (idx === -1) {
+                // add
+                favorites.push({ title: song.title, artist: song.artist, url: song.url, emotions: song.emotions });
+                if (btnEl) { btnEl.classList.add('active'); btnEl.textContent = '♥ Favorite'; }
+            } else {
+                // remove
+                favorites.splice(idx, 1);
+                if (btnEl) { btnEl.classList.remove('active'); btnEl.textContent = '♡ Favorite'; }
+            }
+            saveFavoritesToStorage();
+            renderFavoritesSection();
+        }
+
+        function renderFavoritesSection() {
+            // Favorites are now displayed on the separate /favorites page
+            // This function is kept for compatibility but does nothing here
+        }
+
+        // Playlist helpers - stored in localStorage under 'playlists'
+        function getPlaylists() {
+            try { const raw = localStorage.getItem('playlists'); return raw ? JSON.parse(raw) : {}; } catch(e) { return {}; }
+        }
+
+        function savePlaylists(pl) { localStorage.setItem('playlists', JSON.stringify(pl)); }
+
+        // Current song being added
+        let __currentSongForPlaylist = null;
+
+        function openPlaylistModal(song) {
+            __currentSongForPlaylist = { title: song.title, artist: song.artist, url: song.url, emotions: song.emotions };
+            populatePlaylistSelect();
+            document.getElementById('newPlaylistNameForAdd').value = '';
+            document.getElementById('playlistModal').style.display = 'block';
+        }
+
+        function populatePlaylistSelect() {
+            const sel = document.getElementById('playlistSelect');
+            sel.innerHTML = '';
+            const pl = getPlaylists();
+            const names = Object.keys(pl);
+            const emptyOpt = document.createElement('option'); emptyOpt.value = ''; emptyOpt.textContent = '-- select --'; sel.appendChild(emptyOpt);
+            names.forEach(n => {
+                const o = document.createElement('option'); o.value = n; o.textContent = `${n} (${pl[n].length})`; sel.appendChild(o);
+            });
+        }
+
+        function addSongToSelectedPlaylist() {
+            const sel = document.getElementById('playlistSelect');
+            const newName = document.getElementById('newPlaylistNameForAdd').value.trim();
+            const chosen = sel.value;
+            let targetName = chosen || newName;
+            if (!targetName) { alert('Select or enter a playlist name'); return; }
+            addSongToPlaylist(__currentSongForPlaylist, targetName);
+            closePlaylistModal();
+        }
+
+        function addSongToPlaylist(song, playlistName) {
+            const pl = getPlaylists();
+            if (!pl[playlistName]) pl[playlistName] = [];
+            // avoid duplicates by id
+            const id = `${song.title}---${song.artist}`;
+            if (!pl[playlistName].some(s => `${s.title}---${s.artist}` === id)) {
+                pl[playlistName].push(song);
+            }
+            savePlaylists(pl);
+            try { localStorage.setItem('playlists_last_updated', String(Date.now())); } catch(e) { /* ignore */ }
+        }
+
+        function closePlaylistModal() {
+            document.getElementById('playlistModal').style.display = 'none';
+            __currentSongForPlaylist = null;
+        }
+
+        function playSong(url) {
+            const player = document.getElementById("modalPlayer");
+            if (!url) {
+                player.innerHTML = "<p style='color:#999;'>No preview available</p>";
+                return;
+            }
+            player.innerHTML = `<iframe src="${url}" width="100%" height="80" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
+            player.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Stream count tracking
+        function getStreamCount(song) {
+            try {
+                const raw = localStorage.getItem('songStreams');
+                const streams = raw ? JSON.parse(raw) : {};
+                const songKey = `${song.title}---${song.artist}`;
+                return streams[songKey] || 0;
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        function incrementStreamCount(song) {
+            try {
+                const raw = localStorage.getItem('songStreams');
+                const streams = raw ? JSON.parse(raw) : {};
+                const songKey = `${song.title}---${song.artist}`;
+                streams[songKey] = (streams[songKey] || 0) + 1;
+                localStorage.setItem('songStreams', JSON.stringify(streams));
+            } catch (e) {
+                console.error('Failed to update stream count', e);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById("albumModal").style.display = "none";
+            document.getElementById("modalPlayer").innerHTML = "";
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById("albumModal");
+            if (event.target == modal) {
+                modal.style.display = "none";
+                document.getElementById("modalPlayer").innerHTML = "";
+            }
+        }
+    </script>
+</body>
+</html>

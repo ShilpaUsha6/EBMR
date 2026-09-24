@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1 style="
+    margin-top: 30px; 
+    font-size: 2.6rem; 
+    text-shadow: 0 0 12px rgba(255,255,255,0.3);
+">
+    💬 Contact Us
+</h1>
+
+<div style="
+    max-width: 600px;
+    margin: 40px auto;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(20px);
+    border-radius: 25px;
+    padding: 35px;
+    border: 1px solid rgba(255,255,255,0.25);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    animation: fadeIn 1.5s ease;
+">
+
+    {% if message_sent %}
+        <p style="color:#00ffea; font-size:1.2rem; font-weight:600; margin-bottom: 20px;">
+            ✓ Thanks{% if name %}, {{ name }}{% endif %}! Your message was received.
+        </p>
+
+        <p style="margin-top:20px; text-align:center;">
+            <a href="/" 
+               style="color:#00ffea; text-decoration:none; font-weight:600; font-size:1.1rem;">
+               ← Back to Home
+            </a>
+        </p>
+
+    {% else %}
+
+        <form method="POST" style="margin-top: 10px;">
+
+            <input type="text" name="name" placeholder="Your name" required
+                style="
+                    width: 90%;
+                    padding: 12px;
+                    border: none;
+                    border-radius: 12px;
+                    margin-top: 12px;
+                    background: rgba(255,255,255,0.85);
+                    font-size: 1rem;
+                    outline: none;
+                ">
+
+            <input type="email" name="email" placeholder="Your email" required
+                style="
+                    width: 90%;
+                    padding: 12px;
+                    border: none;
+                    border-radius: 12px;
+                    margin-top: 12px;
+                    background: rgba(255,255,255,0.85);
+                    font-size: 1rem;
+                    outline: none;
+                ">
+
+            <textarea name="message" rows="5" placeholder="Your message" required
+                style="
+                    width: 90%;
+                    padding: 12px;
+                    border: none;
+                    border-radius: 12px;
+                    margin-top: 12px;
+                    background: rgba(255,255,255,0.85);
+                    font-size: 1rem;
+                    outline: none;
+                "></textarea>
+
+            <button type="submit" 
+                style="
+                    margin-top: 20px;
+                    background: linear-gradient(90deg, #ff00cc, #3333ff);
+                    color: white;
+                    border: none;
+                    padding: 12px 25px;
+                    font-size: 1.1rem;
+                    border-radius: 30px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+                    transition: 0.3s ease;
+                "
+                onmouseover="this.style.transform='scale(1.07)'"
+                onmouseout="this.style.transform='scale(1)'"
+            >
+                Send Message
+            </button>
+
+        </form>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Favorites - Emotion Music Recommender</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea, #764ba2, #89f7fe, #66a6ff); background-size: 400% 400%; animation: gradientBG 15s ease infinite; min-height: 100vh; overflow-x: hidden; padding: 20px; margin: 0; }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        nav { position: relative; z-index: 10; background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.25); padding: 15px; border-radius: 15px; margin-bottom: 20px; max-width: 600px; margin-left: auto; margin-right: auto; display:flex; justify-content:center; align-items:center; gap:20px; }
+        nav a { margin: 0; text-decoration:none; color:#fff; font-weight:600; transition:0.3s; }
+        nav a:hover { color:#e0e0e0; }
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        h1 { text-align: center; color: #fff; margin-bottom: 30px; text-shadow: 0 0 15px rgba(255,255,255,0.3); }
+        .favorites-list { list-style: none; padding: 0; margin: 0; max-width: 900px; margin-left: auto; margin-right: auto; }
+        .favorite-line { background: rgba(255,255,255,0.95); border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; display:flex; align-items:center; justify-content:space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.08); color:#333; }
+        .favorite-meta { display:flex; flex-direction:column; align-items:flex-start; }
+        .favorite-title { font-size: 16px; font-weight:700; margin: 0; color: #222; }
+        .favorite-artist { font-size: 13px; color: #555; margin: 2px 0 0 0; }
+        .favorite-emotion { font-size: 12px; color: #888; margin-top:4px; }
+        .stream-count { font-size: 11px; color: #999; margin-top: 4px; }
+        .favorite-controls { display:flex; gap:8px; align-items:center; }
+        .play-btn { padding: 8px 12px; background: #667eea; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight:600; }
+        .remove-btn { padding: 8px 12px; background: #e74c3c; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight:600; }
+        .play-btn { padding: 8px 12px; background: #667eea; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight:600; flex: 1; }
+        .play-btn:hover { background: #5564d6; }
+        .remove-btn { padding: 8px 12px; background: #e74c3c; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight:600; flex: 1; }
+        .remove-btn:hover { background: #c0392b; }
+        .empty-message { text-align: center; color: #fff; font-size: 18px; margin-top: 50px; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .player-container { position: fixed; bottom: 20px; left: 20px; right: 20px; max-width: 400px; background: #fff; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); padding: 15px; z-index: 100; display: none; }
+        .player-container.active { display: block; }
+        .player-container iframe { width: 100%; height: 80px; border: none; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/albums">Albums</a>
+        <a href="/favorites">Favorites</a>
+        <a href="/profile">Profile</a>
+        <a href="/contact">Contact</a>
+    </nav>
+
+    <div class="container">
+        <h1>❤️ Your Favorite Songs</h1>
+        <ul id="favoritesContainer" class="favorites-list"></ul>
+        <div id="emptyMessage" class="empty-message" style="display:none;">
+            No favorites yet! Add songs from the Albums page.
+        </div>
+    </div>
+
+    <!-- Modal (show song details & player) -->
+    <div id="favModal" class="modal" style="display:none; position:fixed; left:0; top:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index:1000;">
+        <div style="background:#fff; max-width:520px; margin:6% auto; border-radius:12px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.25);">
+            <div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:#fff; padding:18px 20px; display:flex; justify-content:space-between; align-items:center;">
+                <div id="favModalTitle" style="font-size:18px; font-weight:700;"></div>
+                <button id="favModalClose" style="background:transparent; border:none; color:#fff; font-size:24px; cursor:pointer;">&times;</button>
+            </div>
+            <div style="padding:18px;" id="favModalBody">
+                <div id="favModalPlayer" style="margin-bottom:12px;"></div>
+                <div id="favModalDetails" style="color:#333;"></div>
+                <div style="margin-top:12px; display:flex; gap:8px;">
+                    <button id="favModalPlay" class="play-btn">Play</button>
+                    <button id="favModalRemove" class="remove-btn">Remove</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Player at bottom (kept for quick play) -->
+    <div id="playerContainer" class="player-container"></div>
+
+    <script>
+        let favorites = [];
+
+        function loadFavoritesFromStorage() {
+            try {
+                const raw = localStorage.getItem('favoriteSongs');
+                favorites = raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                favorites = [];
+            }
+            renderFavorites();
+        }
+
+        function saveFavoritesToStorage() {
+            localStorage.setItem('favoriteSongs', JSON.stringify(favorites));
+        }
+
+        function removeFavorite(song) {
+            const idx = favorites.findIndex(f => 
+                f.title === song.title && f.artist === song.artist
+            );
+            if (idx !== -1) {
+                favorites.splice(idx, 1);
+                saveFavoritesToStorage();
+                loadFavoritesFromStorage(); // Re-render
+            }
+        }
+
+        function playSong(url) {
+            const playerContainer = document.getElementById('playerContainer');
+            if (!url) {
+                playerContainer.innerHTML = '<p style="color:#999; margin:0;">No preview available</p>';
+                playerContainer.classList.add('active');
+                return;
+            }
+            playerContainer.innerHTML = `<iframe src="${url}" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
+            playerContainer.classList.add('active');
+        }
+
+        function renderFavorites() {
+            const container = document.getElementById('favoritesContainer');
+            const emptyMsg = document.getElementById('emptyMessage');
+            container.innerHTML = '';
+
+            if (!favorites || favorites.length === 0) {
+                container.style.display = 'none';
+                emptyMsg.style.display = 'block';
+                return;
+            }
+
+            emptyMsg.style.display = 'none';
+            container.style.display = 'grid';
+
+            favorites.forEach(song => {
+                const li = document.createElement('li');
+                li.className = 'favorite-line';
+
+                const meta = document.createElement('div');
+                meta.className = 'favorite-meta';
+                const titleEl = document.createElement('div');
+                titleEl.className = 'favorite-title';
+                titleEl.textContent = song.title;
+                const artistEl = document.createElement('div');
+                artistEl.className = 'favorite-artist';
+                artistEl.textContent = `by ${song.artist}`;
+                const emotionEl = document.createElement('div');
+                emotionEl.className = 'favorite-emotion';
+                emotionEl.textContent = song.emotions || 'N/A';
+
+                const streamEl = document.createElement('div');
+                streamEl.className = 'stream-count';
+                const streams = getStreamCount(song);
+                streamEl.textContent = `🎵 ${streams} streams`;
+
+                meta.appendChild(titleEl);
+                meta.appendChild(artistEl);
+                meta.appendChild(emotionEl);
+                meta.appendChild(streamEl);
+
+                const controls = document.createElement('div');
+                controls.className = 'favorite-controls';
+
+                const playBtn = document.createElement('button');
+                playBtn.className = 'play-btn';
+                playBtn.textContent = 'Play';
+                playBtn.addEventListener('click', () => openFavoriteModal(song));
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.textContent = 'Remove';
+                removeBtn.addEventListener('click', () => removeFavorite(song));
+
+                controls.appendChild(playBtn);
+                controls.appendChild(removeBtn);
+
+                li.appendChild(meta);
+                li.appendChild(controls);
+
+                container.appendChild(li);
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFavoritesFromStorage();
+        });
+
+        // Modal functions for favorite songs
+        function openFavoriteModal(song) {
+            const modal = document.getElementById('favModal');
+            const titleEl = document.getElementById('favModalTitle');
+            const playerEl = document.getElementById('favModalPlayer');
+            const detailsEl = document.getElementById('favModalDetails');
+            const playBtn = document.getElementById('favModalPlay');
+            const removeBtn = document.getElementById('favModalRemove');
+
+            titleEl.textContent = `${song.title} — ${song.artist}`;
+            detailsEl.innerHTML = `<div style="font-size:14px;color:#666;">${song.emotions || 'N/A'}</div><div style="font-size:12px;color:#999;margin-top:8px;">🎵 ${getStreamCount(song)} streams</div>`;
+
+            // set player
+            if (song.url) {
+                playerEl.innerHTML = `<iframe src="${song.url}" width="100%" height="100" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
+            } else {
+                playerEl.innerHTML = '<div style="color:#999;">No preview available</div>';
+            }
+
+            // play in modal (re-inserts iframe if needed)
+            playBtn.onclick = () => {
+                incrementStreamCount(song);
+                if (song.url) {
+                    playerEl.innerHTML = `<iframe src="${song.url}" width="100%" height="100" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
+                    // Update stream count display
+                    detailsEl.innerHTML = `<div style="font-size:14px;color:#666;">${song.emotions || 'N/A'}</div><div style="font-size:12px;color:#999;margin-top:8px;">🎵 ${getStreamCount(song)} streams</div>`;
+                }
+            };
+
+            // remove from favorites and close modal
+            removeBtn.onclick = () => {
+                removeFavorite(song);
+                closeFavoriteModal();
+            };
+
+            document.getElementById('favModalClose').onclick = closeFavoriteModal;
+            modal.style.display = 'block';
+        }
+
+        function closeFavoriteModal() {
+            const modal = document.getElementById('favModal');
+            document.getElementById('favModalPlayer').innerHTML = '';
+            modal.style.display = 'none';
+        }
+
+        // Stream count tracking
+        function getStreamCount(song) {
+            try {
+                const raw = localStorage.getItem('songStreams');
+                const streams = raw ? JSON.parse(raw) : {};
+                const songKey = `${song.title}---${song.artist}`;
+                return streams[songKey] || 0;
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        function incrementStreamCount(song) {
+            try {
+                const raw = localStorage.getItem('songStreams');
+                const streams = raw ? JSON.parse(raw) : {};
+                const songKey = `${song.title}---${song.artist}`;
+                streams[songKey] = (streams[songKey] || 0) + 1;
+                localStorage.setItem('songStreams', JSON.stringify(streams));
+            } catch (e) {
+                console.error('Failed to update stream count', e);
+            }
+        }
+    </script>
+</body>
+</html>

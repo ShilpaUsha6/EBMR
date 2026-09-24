@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>About - Emotion Music Recommender</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background: linear-gradient(135deg, #667eea, #764ba2, #89f7fe, #66a6ff); background-size: 400% 400%; animation: gradientBG 15s ease infinite; min-height: 100vh; overflow-x: hidden; padding: 20px; }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        nav { background:#fff; padding:15px 20px; box-shadow:0 1px 3px rgba(0,0,0,0.08); margin-bottom:20px; }
+        nav a { margin-right:20px; text-decoration:none; color:#333; font-weight:500; }
+        nav a:hover { color:#666; }
+        .container { max-width: 800px; margin: 40px auto; background:#fff; padding:30px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+        h1 { color:#333; margin-top:0; }
+        p { text-align:left; line-height:1.6; color:#555; }
+        ul { text-align:left; color:#555; line-height:1.8; }
+    </style>
+     <style>
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea, #764ba2, #89f7fe, #66a6ff); background-size: 400% 400%; animation: gradientBG 15s ease infinite; min-height: 100vh; overflow-x: hidden; padding: 20px; margin: 0; }
+        @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        nav { position: relative; z-index: 10; background: rgba(255,255,255,0.15); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255,255,255,0.25); padding: 15px; border-radius: 15px; margin-bottom: 20px; max-width: 600px; margin-left: auto; margin-right: auto; display:flex; justify-content:center; align-items:center; gap:20px; }
+        nav a { margin: 0; text-decoration:none; color:#fff; font-weight:600; transition:0.3s; }
+        nav a:hover { color:#666; }
+        .container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+        h1 { text-align: center; color: #333; margin-bottom: 30px; }
+        .albums-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .album-card { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: transform 0.3s; cursor: pointer; }
+        .album-card:hover { transform: translateY(-5px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .album-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; }
+        .album-title { font-size: 20px; font-weight: bold; margin: 0; }
+        .song-count { font-size: 14px; margin: 5px 0 0 0; opacity: 0.9; }
+        .album-body { padding: 15px; }
+        .song-list { list-style: none; padding: 0; margin: 0; }
+        .song-item { padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+        .song-item:last-child { border-bottom: none; }
+        .song-title { font-weight: 500; color: #333; }
+        .song-emotion { font-size: 12px; color: #999; margin-top: 3px; }
+
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); animation: fadeIn 0.3s ease; }
+        .modal-content { background-color: #fff; margin: 5% auto; padding: 0; border-radius: 12px; width: 90%; max-width: 500px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); animation: slideIn 0.3s ease; }
+        .modal-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { margin: 0; font-size: 24px; }
+        .close { color: white; font-size: 28px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .close:hover { opacity: 0.7; }
+        .modal-body { padding: 25px; max-height: 60vh; overflow-y: auto; }
+        .modal-songs { list-style: none; padding: 0; margin: 0; }
+        .modal-song-item { padding: 12px; background: #f9f9f9; margin: 8px 0; border-radius: 6px; border-left: 4px solid #667eea; }
+        .modal-song-item strong { color: #333; display: block; }
+        .modal-song-item em { color: #999; font-size: 12px; display: block; margin-top: 4px; }
+        .play-btn { padding: 8px 12px; background: #667eea; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight:600; margin-right:8px; }
+        .play-btn:hover { background: #5564d6; }
+        .fav-btn { padding: 6px 10px; background: transparent; color: #e74c3c; border: 1px solid #e74c3c; border-radius: 6px; cursor: pointer; font-weight:600; }
+        .fav-btn.active { background: #e74c3c; color: #fff; }
+        .favorites-panel { max-width: 1000px; margin: 0 auto 18px auto; padding: 12px 18px; background: #fff; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); color: #333; }
+        .favorites-list { display:flex; flex-wrap:wrap; gap:12px; }
+        .favorite-item { background:#f7f7f7; padding:10px 12px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    </style>
+        
+       
+<body>
+    <nav>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/albums">Albums</a>
+        <a href="/favorites">Favorites</a>
+        <a href="/profile">Profile</a>
+        <a href="/contact">Contact</a>
+    </nav>
+    <div class="container">
+        <h1>🎵 About This App</h1>
+        <p>This is an emotion-based music recommender built with Flask. It uses AI and keyword detection to understand your mood and suggest songs that match your emotional state.</p>
+        <h2 style="text-align:left; margin-top:25px;">Features:</h2>
+        <ul>
+            <li>🎯 <strong>Emotion Detection</strong> - Detects emotions like happy, sad, calm, excited, and more from your text input</li>
+            <li>🎶 <strong>Smart Recommendations</strong> - Suggests songs based on your detected emotion</li>
+            <li>🎨 <strong>Beautiful UI</strong> - Modern, responsive design with smooth animations</li>
+            <li>📚 <strong>Albums</strong> - Browse songs organized by artist</li>
+            <li>💬 <strong>Contact</strong> - Get in touch with us</li>
+        </ul>
+        <h2 style="text-align:left; margin-top:25px;">Emotions Supported:</h2>
+        <p style="text-align:left;">Happy, Sad, Calm, Excited, Angry, Romantic, Stressed, Tired</p>
+        <p style="margin-top:30px; text-align:center;"><a href="/" style="color:#667eea; text-decoration:none; font-weight:600;">← Back to Home</a></p>
+    </div>
+</body>
+</html>
